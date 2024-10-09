@@ -9,8 +9,8 @@
 #define ID "93 62 7D 4F"
 
 //define alguns pinos do esp32 que serao conectados aos modulos e componentes
-#define LedVerde 15
-#define LedVermelho 12
+#define LedVerde 2
+#define LedVermelho 15
 #define tranca 2
 #define buzzer 15
 #define SS_PIN 21
@@ -40,7 +40,7 @@ void setup() {
 
 void loop() {
   
-  delay(1000);
+  delay(500);
 
 
   Serial.println("Agardando leitura RFID");     // imprime na primeira linha a string "Aguardando"
@@ -88,9 +88,14 @@ void loop() {
       digitalWrite(tranca, LOW);               // fecha a tranca
       digitalWrite(LedVerde, LOW);             // e desliga o led
  
+  } else {
+      
+      digitalWrite(LedVermelho, HIGH); 
+      Serial.println("Acesso Negado");            // informamos pelo lcd que a tranca foi aberta
+      
+      // ligamos o led verde
+      delay(5000);
+      digitalWrite(LedVermelho, LOW);             // e desliga o led
   }
-
-
-
 
 }
