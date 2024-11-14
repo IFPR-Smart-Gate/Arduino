@@ -2,7 +2,7 @@
 #include <WebServer.h>
  
 const char* ssid = "IFPR-Docentes";
-const char* password = "nv.k2+k6";
+const char* password = "?????";
  
 WebServer server(80);
  
