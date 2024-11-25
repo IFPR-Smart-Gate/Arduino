@@ -9,7 +9,6 @@
 #include <WebServer.h>
 
 // Definiremos o id que sera liberado o acesso
-
 #define ID "93 62 7D 4F"
 
 //define alguns pinos do esp32 que serao conectados aos modulos e componentes
@@ -20,30 +19,30 @@
 #define SS_PIN 21
 #define RST_PIN 22
 
-
 #define SERVO 4
+//para qualquer duvida envolvendo o servo motor, consultar https://docs.arduino.cc/libraries/servo/
 Servo s; 
 int pos; 
 
-const char* ssid = "IFPR-Alunos"; /* Add your router's SSID */
-const char* password = "";         /*Add the password */
+const char* ssid = "IFPR-Alunos"; //Add your router's SSID
+const char* password = ""; //Add the password
 
-// ----- Configuração do Servidor -----
+//Configuração do Servidor
 WebServer server(80);
 
-MFRC522 mfrc522(SS_PIN, RST_PIN);  // define os pinos de controle do modulo de leitura de cartoes RFID
+MFRC522 mfrc522(SS_PIN, RST_PIN);//define os pinos de controle do modulo de leitura de cartoes RFID
 
-void setup() {
-
-  Serial.begin(115200);  // inicia a comunicacao serial com o computador na velocidade de 115200 baud rate
-
+void setup() 
+{
+  Serial.begin(115200);//inicia a comunicacao serial com o computador na velocidade de 115200 baud rate
 
   Serial.println("Conectando ao: " + (String) ssid);
 
-  WiFi.mode(WIFI_STA);        /* Configure ESP8266 in STA Mode */
-  WiFi.begin(ssid, password); /* Connect to Wi-Fi based on above SSID and Password */
+  WiFi.mode(WIFI_STA);//Configura ESP8266 no modo STA
+  WiFi.begin(ssid, password);//Conecta no wi-fi baseado e SSID e senha
 
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED) 
+  {
     Serial.print("*");
     delay(1000);
   }
@@ -54,15 +53,13 @@ void setup() {
   delay(100);
 
   Serial.print("\n");
-
-  s.attach(SERVO);
+  
+  s.attach(SERVO);//
   s.write(0);
 
-  SPI.begin();  // inicia a comunicacao SPI que sera usada para comunicacao com o mudulo RFID
+  SPI.begin();//inicia a comunicacao SPI que sera usada para comunicacao com o mudulo RFID
 
-
-  mfrc522.PCD_Init();  //inicia o modulo RFID
-
+  mfrc522.PCD_Init();//inicia o modulo RFID
 
   Serial.println("RFID + ESP32");
   Serial.println("Passe alguma tag RFID para verificar o id da mesma.");
@@ -70,15 +67,13 @@ void setup() {
   // define alguns pinos como saida
   pinMode(LedVerde, OUTPUT);
   pinMode(LedVermelho, OUTPUT);
-  pinMode(tranca, OUTPUT);
-  pinMode(buzzer, OUTPUT);
-
+  //pinMode(tranca, OUTPUT);
+  //pinMode(buzzer, OUTPUT);
 
   // Configura as funções das páginas
   server.on("/acende_led", acende_led);
 
-
-    // Inicializa o servidor
+  // Inicializa o servidor
   server.begin();
   
   Serial.println("Servidor ESP8266 inicializado com sucesso!");
@@ -87,31 +82,30 @@ void setup() {
   Serial.print("http://");
   Serial.println(WiFi.localIP());
   Serial.print("\n");
-
-
 }
 
-void loop() {
-  
-
-
-  //Serial.println("Aguardando leitura RFID");     // imprime na primeira linha a string "Aguardando"
-
-  if (!mfrc522.PICC_IsNewCardPresent()) {
-    return;  // se nao tiver um cartao para ser lido recomeça o void loop
+void loop() 
+{
+  //Serial.println("Aguardando leitura RFID");// imprime na primeira linha a string "Aguardando"
+  if (!mfrc522.PICC_IsNewCardPresent()) 
+  {
+    return;//se nao tiver um cartao para ser lido recomeça o void loop
   }
 
-  if (!mfrc522.PICC_ReadCardSerial()) {
-    return;  //se nao conseguir ler o cartao recomeça o void loop tambem
+  if (!mfrc522.PICC_ReadCardSerial()) 
+  {
+    return;//se nao conseguir ler o cartao recomeça o void loop tambem
   }
 
   String conteudo = "";  // cria uma string
 
   Serial.print("id da tag :");  //imprime na serial o id do cartao
 
-  for (byte i = 0; i < mfrc522.uid.size; i++) {  // faz uma verificacao dos bits da memoria do cartao
-    //ambos comandos abaixo vão concatenar as informacoes do cartao...
-    //porem os 2 primeiros irao mostrar na serial e os 2 ultimos guardarao os valores na string de conteudo para fazer as verificacoes
+  // faz uma verificacao dos bits da memoria do cartao
+  //ambos comandos abaixo vão concatenar as informacoes do cartao...
+  //porem os 2 primeiros irao mostrar na serial e os 2 ultimos guardarao os valores na string de conteudo para fazer as verificacoes
+  for (byte i = 0; i < mfrc522.uid.size; i++) 
+  { 
     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
     Serial.print(mfrc522.uid.uidByte[i], HEX);
     conteudo.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
@@ -119,52 +113,49 @@ void loop() {
   }
   
   
-  conteudo.toUpperCase();  // deixa as letras da string todas maiusculas
+  conteudo.toUpperCase();// deixa as letras da string todas maiusculas
 
   Serial.println("\n---------------------------------------");
   Serial.println(conteudo.substring(1));
   Serial.println("\n---------------------------------------");
 
 
-  if (conteudo.substring(1) == ID){ // verifica se o ID do cartao lido tem o mesmo ID do cartao que queremos liberar o acesso
+  if (conteudo.substring(1) == ID)// verifica se o ID do cartao lido tem o mesmo ID do cartao que queremos liberar o acesso
+  { 
  
-      digitalWrite(LedVerde, HIGH);            // ligamos o led verde
+      digitalWrite(LedVerde, HIGH);// ligamos o led verde
       Serial.println("Acesso Liberado"); 
-      s.write(100); 
+      s.write(100);//levanta a catraca
  
  
-      for(int s = 5; s > 0; s--){             //vai informando ao usuario quantos segundos faltao para a tranca ser fechada
+      for(int s = 5; s > 0; s--) //vai informando ao usuario quantos segundos faltao para a tranca ser fechada
+      {            
         Serial.println(s);
         delay(1000);
       }
  
-      digitalWrite(tranca, LOW);               // fecha a tranca
-      digitalWrite(LedVerde, LOW);  
-      s.write(0);           // e desliga o led
- 
-  } else {
-      
-      digitalWrite(LedVermelho, HIGH); 
+      s.write(0);//baixa a catraca  
+      digitalWrite(LedVerde, LOW);//desliga o led
+  }else 
+  {
+      digitalWrite(LedVermelho, HIGH);//ligou o led vermelho
       Serial.println("Acesso Negado");  
-      s.write(0);           // informamos pelo lcd que a tranca foi aberta
-      
-      // ligamos o led verde
-      delay(5000);
-      digitalWrite(LedVermelho, LOW);             // e desliga o led
+      s.write(0);//tranca ta fechada
+      delay(5000);//espera 5 segundos
+      digitalWrite(LedVermelho, LOW);//desliga o led vermelho             
   }
-
-
+  
   // Responde às requisições feitas
-  server.handleClient();
-
+  server.handleClient();//Tratamento de solicitações recebidas de clientes
   delay(500);
-
-
 }
 
-void acende_led(){
+//funcao nao usada
+/* 
+void acende_led()
+{
   digitalWrite(LedVermelho, HIGH); 
-  digitalWrite(LedVerde, HIGH);            // ligamos o led verde
-    server.send(200, "text/html", "bomba desligada");
-
+  digitalWrite(LedVerde, HIGH);//ligamos o led verde
+  server.send(200, "text/html", "bomba desligada");
 }
+*/
