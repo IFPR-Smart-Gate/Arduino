@@ -1,5 +1,5 @@
 
-// algumas bibliotecas
+// BIBLIOTECAS PARA O RFID
 #include <SPI.h>
 #include <MFRC522.h>
 #include <Wire.h>
@@ -8,15 +8,21 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 
+//BIBLIOTECAS PARA O SERVO MOTOR
+#include <ESP32Servo.h>
+
+
 // Configurações da rede Wi-Fi
-const char* ssid = "Nuestra Casa";   // Substitua pelo SSID da sua rede
-const char* password = "chica2022";  // Substitua pela senha da sua rede
+const char* ssid = "Smart Gate";   // Substitua pelo SSID da sua rede
+const char* password = "saopaulo";  // Substitua pela senha da sua rede
 
 // URL do servidor PHP
-const String serverUrl = "http://192.168.1.32/smart_gate/index.php";
+const String serverUrl = "http://192.168.129.96:81/smart_gate/index.php";
 
-// Definiremos o id que sera liberado o acesso
-#define ID "93 62 7D 4F"
+// Cria o objeto do servo
+const int pinoServo = 5;
+
+Servo meuServo;  
 
 //define alguns pinos do esp32 que serao conectados aos modulos e componentes
 #define LedVerde 2
@@ -24,7 +30,6 @@ const String serverUrl = "http://192.168.1.32/smart_gate/index.php";
 
 #define SS_PIN 21
 #define RST_PIN 22
-
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // define os pinos de controle do modulo de leitura de cartoes RFID
 
@@ -51,10 +56,14 @@ void setup() {
     Serial.print(".");
   }
   Serial.println("\nConectado ao Wi-Fi");
+
+  // Anexa o servo ao pino especificado
+  meuServo.attach(pinoServo);
+  meuServo.write(0);
+
 }
 
 void loop() {
-
 
   if (WiFi.status() == WL_CONNECTED) {
 
@@ -116,24 +125,24 @@ void loop() {
       Serial.println(response);
 
       if (response == "ok") {
+
+        meuServo.write(90);
+
         digitalWrite(LedVerde, HIGH);       // ligamos o led verde
         Serial.println("Acesso Liberado");  // informamos pelo lcd que a tranca foi aberta
-
 
         for (byte s = 10; s > 0; s--) {  //vai informando ao usuario quantos segundos faltao para a tranca ser fechada
           Serial.println(s);
           delay(1000);
         }
 
-        //digitalWrite(tranca, LOW);               // fecha a tranca
+        meuServo.write(0);
         digitalWrite(LedVerde, LOW);  // e desliga o led
       
       }else {
 
         digitalWrite(LedVermelho, HIGH);
         Serial.println("Acesso Negado");  // informamos pelo lcd que a tranca foi aberta
-
-        // ligamos o led verde
         delay(5000);
         digitalWrite(LedVermelho, LOW);  // e desliga o led
       }
@@ -149,5 +158,5 @@ void loop() {
     Serial.println("Wi-Fi desconectado");
   }
 
-  delay(10000);  // Aguarda 10 segundos antes da próxima leitura
+  delay(1000);  // Aguarda 1 segundo antes da próxima leitura
 }
